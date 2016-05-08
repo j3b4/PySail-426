@@ -19,10 +19,13 @@ import math
 # RaggioTerrestre=60.0*360/(2*math.pi)#nm
 EARTH_RADIUS = 60.0*360/(2*math.pi) # in Nautical Miles
 # idealized spherical version of the Earth.
-#FUNZIONI
-def puntodistanterotta(latA,lonA,Distanza,Rotta):
-    #non funziona in prossimita' dei poli
-    #dove può risultare latC>90, log(tan(latC/...))=log(<0)   (*)
+
+# FUNCTIONS
+# def puntodistanterotta(latA,lonA,Distanza,Rotta):
+def offset(latA,lonA,Distanza,Rotta):
+    # non funziona in prossimita' dei poli
+    # dove può risultare latC>90, log(tan(latC/...))=log(<0)   (*)
+    # Does not function near the poles
     a=Distanza*1.0/EARTH_RADIUS
     latB=latA+a*math.cos(Rotta)
     if math.copysign(latA-latB,1)<=math.radians(0.1/3600.0):
@@ -32,6 +35,7 @@ def puntodistanterotta(latA,lonA,Distanza,Rotta):
         q=(latB-latA)/Df
     lonB=lonA-a*math.sin(Rotta)/q
     return latB,lonB
+
 def lossodromica(latA,lonA,latB,lonB):
     #non funziona in prossimita' dei poli
     #per latB=-90: math domain error log(0)
