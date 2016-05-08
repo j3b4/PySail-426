@@ -22,18 +22,18 @@ EARTH_RADIUS = 60.0*360/(2*math.pi) # in Nautical Miles
 
 # FUNCTIONS
 # def puntodistanterotta(latA,lonA,Distanza,Rotta):
-def offset(latA,lonA,Distanza,Rotta):
-    # non funziona in prossimita' dei poli
-    # dove può risultare latC>90, log(tan(latC/...))=log(<0)   (*)
-    # Does not function near the poles
-    a=Distanza*1.0/EARTH_RADIUS
-    latB=latA+a*math.cos(Rotta)
+def offset(latA,lonA,Distance,Heading):
+    # Does not function correctly near the poles
+    # I think this is the cosine method
+    # haversine would be more accurate
+    a=Distance*1.0/EARTH_RADIUS
+    latB=latA+a*math.cos(Heading)
     if math.copysign(latA-latB,1)<=math.radians(0.1/3600.0):
         q=math.cos(latA)
     else:
         Df=math.log(math.tan(latB/2+math.pi/4)/math.tan(latA/2+math.pi/4),math.e)#(*)
         q=(latB-latA)/Df
-    lonB=lonA-a*math.sin(Rotta)/q
+    lonB=lonA-a*math.sin(Heading)/q
     return latB,lonB
 
 def lossodromica(latA,lonA,latB,lonB):
@@ -47,18 +47,18 @@ def lossodromica(latA,lonA,latB,lonB):
     else:
         Df=math.log(math.tan(latB/2+math.pi/4)/math.tan(latA/2+math.pi/4),math.e)
         q=(latB-latA)*1.0/Df
-    Distanza=EARTH_RADIUS*((latA-latB)**2+(q*(lonA-lonB))**2)**0.5
-    Rotta=math.atan2(-q*(lonB-lonA),(latB-latA))
-    if Rotta<0:Rotta=Rotta+2.0*math.pi#atan2:[-pi,pi]
-    return Distanza,Rotta
+    Distance=EARTH_RADIUS*((latA-latB)**2+(q*(lonA-lonB))**2)**0.5
+    Heading=math.atan2(-q*(lonB-lonA),(latB-latA))
+    if Heading<0:Heading=Heading+2.0*math.pi#atan2:[-pi,pi]
+    return Distance,Heading
 def ortodromica(latA,lonA,latB,lonB):
-    Distanza=math.cos(latA)*math.cos(latB)*math.cos(lonB-lonA)+math.sin(latA)*math.sin(latB)
-    Distanza=EARTH_RADIUS*math.acos(Distanza)
+    Distance=math.cos(latA)*math.cos(latB)*math.cos(lonB-lonA)+math.sin(latA)*math.sin(latB)
+    Distance=EARTH_RADIUS*math.acos(Distance)
     x=math.cos(latA)*math.sin(latB)-math.sin(latA)*math.cos(latB)*math.cos(lonB-lonA)
     y=math.sin(lonB-lonA)*math.cos(latB)
-    Rotta=math.atan2(-y,x)
-    if Rotta<0:Rotta=Rotta+2.0*math.pi#atan2:[-pi,pi]
-    return Distanza,Rotta
+    Heading=math.atan2(-y,x)
+    if Heading<0:Heading=Heading+2.0*math.pi#atan2:[-pi,pi]
+    return Distance,Heading
 def riduci360(alfa):
     n=int(alfa*0.5/math.pi)
     n=math.copysign(n,1)
