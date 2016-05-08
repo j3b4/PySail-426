@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#Copyright (C) 2012 Riccardo Apolloni
+# Copyright (C) 2012 Riccardo Apolloni
 '''
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,13 +15,15 @@ For detail about GNU see <http://www.gnu.org/licenses/>.
 '''
 import math
 
-#COSTANTI
-RaggioTerrestre=60.0*360/(2*math.pi)#nm
+# CONSTANTS
+# RaggioTerrestre=60.0*360/(2*math.pi)#nm
+EARTH_RADIUS = 60.0*360/(2*math.pi) # in Nautical Miles
+# idealized spherical version of the Earth.
 #FUNZIONI
 def puntodistanterotta(latA,lonA,Distanza,Rotta):
     #non funziona in prossimita' dei poli
     #dove può risultare latC>90, log(tan(latC/...))=log(<0)   (*)
-    a=Distanza*1.0/RaggioTerrestre
+    a=Distanza*1.0/EARTH_RADIUS
     latB=latA+a*math.cos(Rotta)
     if math.copysign(latA-latB,1)<=math.radians(0.1/3600.0):
         q=math.cos(latA)
@@ -41,13 +43,13 @@ def lossodromica(latA,lonA,latB,lonB):
     else:
         Df=math.log(math.tan(latB/2+math.pi/4)/math.tan(latA/2+math.pi/4),math.e)
         q=(latB-latA)*1.0/Df
-    Distanza=RaggioTerrestre*((latA-latB)**2+(q*(lonA-lonB))**2)**0.5
+    Distanza=EARTH_RADIUS*((latA-latB)**2+(q*(lonA-lonB))**2)**0.5
     Rotta=math.atan2(-q*(lonB-lonA),(latB-latA))
     if Rotta<0:Rotta=Rotta+2.0*math.pi#atan2:[-pi,pi]
     return Distanza,Rotta
 def ortodromica(latA,lonA,latB,lonB):
     Distanza=math.cos(latA)*math.cos(latB)*math.cos(lonB-lonA)+math.sin(latA)*math.sin(latB)
-    Distanza=RaggioTerrestre*math.acos(Distanza)
+    Distanza=EARTH_RADIUS*math.acos(Distanza)
     x=math.cos(latA)*math.sin(latB)-math.sin(latA)*math.cos(latB)*math.cos(lonB-lonA)
     y=math.sin(lonB-lonA)*math.cos(latB)
     Rotta=math.atan2(-y,x)
