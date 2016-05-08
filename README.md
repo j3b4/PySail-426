@@ -1,4 +1,7 @@
 # PySail-426
+## The APOLLONI branch is intended to be a static reserve of the original
+code from Ricardo Apolloni. Not to be merged.
+
 Python Sailing Simulation based on the work of the intrepid and generous
 Ricardo Apolloni.
 
