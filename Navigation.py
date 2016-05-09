@@ -16,14 +16,16 @@ For detail about GNU see <http://www.gnu.org/licenses/>.
 import math
 
 # CONSTANTS
-# RaggioTerrestre=60.0*360/(2*math.pi)#nm
 EARTH_RADIUS = 60.0*360/(2*math.pi)  # in Nautical Miles
-# idealized spherical version of the Earth.
+# for an idealized spherical Earth.
 
 
 # FUNCTIONS
-# def puntodistanterotta(latA,lonA,Distanza,Rotta):
 def offset(latA, lonA, Distance, Heading):
+    # Takes a position (lat,lon)
+    # a distance in nautical miles and a direction in 0-360
+    # calculates where you would end up if you started a journey at that
+    # heading and moved in a "straight line" (Great Circle)
     # Does not function correctly near the poles
     # I think this is the cosine method
     # haversine would be more accurate
@@ -40,8 +42,13 @@ def offset(latA, lonA, Distance, Heading):
     return latB, lonB
 
 
-def lossodromica(latA, lonA, latB, lonB):
+def loxodrome(latA, lonA, latB, lonB):  # lossodromica
+    # Rhumb line navigation
+    # Takes two points on earth and returns:
+    # the distance and constant (true) bearing one would need to
+    # follow to reach it.
     # Doesn't function near poles:
+    # but you shouldn't be sailing near the poles anyways!
     # when latB = -90: math domain error log(0)
     # when latA = -90 [zero divison error]
     # when A==B returns (0.0,0.0)
@@ -59,7 +66,12 @@ def lossodromica(latA, lonA, latB, lonB):
     return Distance, Heading
 
 
-def ortodromica(latA, lonA, latB, lonB):
+def orthodrome(latA, lonA, latB, lonB):  # ortodromica
+    # Great Circle Navigation
+    # For two points on the earths surface:
+    # returns the INITIAL heading and distance needed to
+    # arrive at the second point starting at the first.
+    # should be parallel to "offset" above
     Distance = (math.cos(latA)
                 * math.cos(latB)
                 * math.cos(lonB-lonA)
@@ -82,41 +94,45 @@ def ortodromica(latA, lonA, latB, lonB):
     return Distance, Heading
 
 
-def riduci360(alfa):
-    n = int(alfa * 0.5/math.pi)
+def range360(radians):  # def riduci360(alfa):
+    # input is in radians
+    # cannot get my head around this yet
+    n = int(radians * 0.5/math.pi)
     n = math.copysign(n, 1)
-    if alfa > 2.0 * math.pi:
-        alfa = alfa-n * 2.0 * math.pi
-    if alfa < 0:
-        alfa = (n+1) * 2.0 * math.pi + alfa
-    if alfa > 2.0 * math.pi or alfa < 0:
-        print "errore riduci360"
-    return alfa
+    if radians > 2.0 * math.pi:  # 6.28319 for argument
+        radians = radians - n * 2.0 * math.pi
+    if radians < 0:
+        radians = (n+1) * 2.0 * math.pi + radians
+    if radians > 2.0 * math.pi or radians < 0:
+        print "error range360"
+    return radians
 
 
-def riduci180(alfa):
-    if alfa > math.pi:
-        alfa = alfa - 2 * math.pi
-    if alfa < -math.pi:
-        alfa = 2 * math.pi + alfa
-    if alfa > math.pi or alfa < -math.pi:
-        print "errore riduci180"
-    return alfa
+def range180(radians):  # def riduci180(alfa):
+    # input in radians
+    if radians > math.pi:
+        radians = radians - 2 * math.pi
+    if radians < -math.pi:
+        radians = 2 * math.pi + radians
+    if radians > math.pi or radians < -math.pi:
+        print "error range180"
+    return radians
 
 
-def scartorotta(rotta1, rotta2):
-    # rende l'angolo [0-math.pi] tra rotta1 e rotta2
-    scarto = math.copysign(rotta1 - rotta2, 1)
-    if scarto > math.pi:
-        scarto = 2 * math.pi - scarto
-    return scarto
+def delta(route1, route2):  # def scartorotta(rotta1, rotta2):
+    # return the smallest angle between two routes
+    delta = math.copysign(route1 - route2, 1)
+    if delta > math.pi:
+        delta = 2 * math.pi - delta
+    return delta
 
 
-def stampalat(lat):
+def stampalat(lat):  # def stampalat(lat):
     # ritorna una stringa di testo in formato xxGradi,xxPrimi, N/S
-    latdecimali = math.copysign(math.degrees(lat), 1)
-    latgradi = int(latdecimali)
-    latprimi = (latdecimali - latgradi) * 60
+    # returns a string in the format xxDegrees,xxMinutes, N/S
+    lat_decimal = math.copysign(math.degrees(lat), 1) # latdecimali
+    latgradi = int(latdecimal)
+    latprimi = (latdecimal - latgradi) * 60
     if latprimi > 59.51:
         latgradi = latgradi + 1
         latprimi = 0
