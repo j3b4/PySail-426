@@ -127,49 +127,49 @@ def delta(route1, route2):  # def scartorotta(rotta1, rotta2):
     return delta
 
 
-def stampalat(lat):  # def stampalat(lat):
-    # ritorna una stringa di testo in formato xxGradi,xxPrimi, N/S
+def print_lat(lat):  # def stampalat(lat):
     # returns a string in the format xxDegrees,xxMinutes, N/S
-    lat_decimal = math.copysign(math.degrees(lat), 1) # latdecimali
-    latgradi = int(latdecimal)
-    latprimi = (latdecimal - latgradi) * 60
-    if latprimi > 59.51:
-        latgradi = latgradi + 1
-        latprimi = 0
+    lat_decimal = math.copysign(math.degrees(lat), 1)  # latdecimali
+    lat_degree = int(lat_decimal)  # latgradi
+    lat_minute = (lat_decimal - lat_degree) * 60  # latprimi
+    if lat_minute > 59.51:
+        lat_degree = lat_degree + 1
+        lat_minute = 0
     else:
-        if latprimi - int(latprimi) > 0.51:
-            latprimi = int(latprimi) + 1
+        if lat_minute - int(lat_minute) > 0.51:
+            lat_minute = int(lat_minute) + 1
         else:
-            latprimi = int(latprimi)
+            lat_minute = int(lat_minute)
     if lat > 0:
-        segno = "N"
+        hemisphere = "N"  # segno
     else:
-        segno = "S"
-    gradi = "%2d" % latgradi
-    primi = "%2d" % latprimi
+        hemisphere = "S"
+    gradi = "%2d" % lat_degree  # gradi
+    primi = "%2d" % lat_minute  # primi
     lat = (gradi.replace(" ", "0") + u"°" + primi.replace(" ", "0")
-           + "'" + segno)
+           + "'" + hemisphere)
     return lat
 
 
-def stampalon(lon):
-    londecimali = math.copysign(math.degrees(lon), 1)
-    longradi = int(londecimali)
-    lonprimi = (londecimali - longradi) * 60
-    if lonprimi > 59.51:
-        longradi = longradi + 1
-        lonprimi = 0
+def print_lon(lon):  # def stampalon(lon):
+    # returns a string in the format xxDegrees,xxMinutes, N/S
+    lon_decimal = math.copysign(math.degrees(lon), 1)  # londecimali
+    lon_degree = int(lon_decimal)  # longradi
+    lon_minutes = (lon_decimal - lon_degree) * 60  # lonprimi
+    if lon_minutes > 59.51:
+        lon_degree = lon_degree + 1
+        lon_minutes = 0
     else:
-        if lonprimi - int(lonprimi) > 0.51:
-            lonprimi = int(lonprimi) + 1
+        if lon_minutes - int(lon_minutes) > 0.51:
+            lon_minutes = int(lon_minutes) + 1
         else:
-            lonprimi = int(lonprimi)
+            lon_minutes = int(lon_minutes)
     if lon > 0:
-        segno = "W"
+        hemisphere = "W"
     else:
-        segno = "E"
-    gradi = "%3d" % longradi
-    primi = "%2d" % lonprimi
-    lon = (gradi.replace(" ", "0") + u"°" + primi.replace(" ", "0")
-           + "'" + segno)
+        hemisphere = "E"
+    degrees = "%3d" % lon_degree  # gradi
+    minutes = "%2d" % lon_minutes
+    lon = (degrees.replace(" ", "0") + u"°" + minutes.replace(" ", "0")
+           + "'" + hemisphere)
     return lon
