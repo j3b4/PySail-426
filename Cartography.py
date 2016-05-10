@@ -21,45 +21,50 @@ import struct
 # lat > 0 North, lon > 0 East
 class Chart:  # class Carta:
     def __init__(self, nomefile='GSHH/gshhs_l.b',
-                 boxcarta=[(math.radians(90), math.radians(-90)),
+                 chartbox=[(math.radians(90), math.radians(-90)),  # boxcarta
                            (math.radians(180), math.radians(-180))]):
         # nomefile string
-        # boxcarta [(latmax,latmin),(lonmax,lonmin)]
-        self.polygon=[]  # poligoni
-        file=open(nomefile,"rb")
+        # chartbox [(latmax,latmin),(lonmax,lonmin)]
+        self.polygons = []  # poligoni
+        file = open(nomefile, "rb")
         try:
-            header=file.read(44)
-            while header!="":
-                header=struct.unpack(">11i",header)
-                idnum=header[0]
-                npti=header[1]
-                flag=header[2]
-                flag_str=str32bit(flag)
-                poligono=[]
-                if int(flag_str[24:32],2)==1:#livello 1 shoreline
-                    for n in range(0,npti):
-                        pto=file.read(8)
-                        pto=struct.unpack(">2i",pto)
-                        lon=math.radians(pto[0]*10**-6)
-                        lat=math.radians(pto[1]*10**-6)
-                        if lon>math.pi: lon=lon-2*math.pi
-                        if lat<boxcarta[0][0] and lat>boxcarta[0][1] and lon<boxcarta[1][0] and lon>boxcarta[1][1]:
-                            poligono.append((lat,lon))
-                            
-                        else:#spezzo il poligono e ne inizio uno nuovo
-                            if len(poligono)>0:self.polygon.append(poligono)
-                            poligono=[]
-                    if len(poligono)>0:
-                        self.polygon.append(poligono)
+            header = file.read(44)
+            while header != "":
+                header = struct.unpack(">11i", header)
+                idnum = header[0]
+                npti = header[1]
+                flag = header[2]
+                flag_str = str32bit(flag)
+                polygon = []  # poligono
+                if int(flag_str[24:32], 2) == 1:  # level 1 shoreline
+                    for n in range(0, npti):
+                        pto = file.read(8)
+                        pto = struct.unpack(">2i", pto)
+                        lon = math.radians(pto[0] * 10**-6)
+                        lat = math.radians(pto[1] * 10**-6)
+                        if lon > math.pi:
+                            lon = lon - 2 * math.pi
+                        if lat < chartbox[0][0] \
+                                and lat > chartbox[0][1] \
+                                and lon < chartbox[1][0] \
+                                and lon > chartbox[1][1]:
+                                    polygon.append((lat, lon))
+                        else:  # break the polygon and start a new one
+                            if len(polygon) > 0:
+                                self.polygons.append(polygon)
+                            polygon = []
+                    if len(polygon) > 0:
+                        self.polygons.append(polygon)
                 else:
-                    file.read(8*npti)
-                header=file.read(44)
+                    file.read(8 * npti)
+                header = file.read(44)
         finally:
             file.close()
 
+
 def str32bit(flag):
-    #flag 1 integer vs stringa 8 bit
-    flag=bin(flag)[2:]#stringa di bit
-    if len(flag)<32:
-        flag=(32-len(flag))*"0"+flag
+    # flag 1 integer vs stringa 8 bit
+    flag = bin(flag)[2:]  # stringa di bit
+    if len(flag) < 32:
+        flag = (32-len(flag)) * "0" + flag
     return flag
