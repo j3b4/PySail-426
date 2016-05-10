@@ -20,7 +20,8 @@ import struct
 # Conventions
 # lat > 0 North, lon > 0 East
 class Chart:  # class Carta:
-    def __init__(self, nomefile='GSHH/gshhs_l.b',
+    def __init__(self,
+                 nomefile='GSHH/gshhs_l.b',
                  chartbox=[(math.radians(90), math.radians(-90)),  # boxcarta
                            (math.radians(180), math.radians(-180))]):
         # nomefile string
@@ -40,15 +41,15 @@ class Chart:  # class Carta:
                     for n in range(0, npti):
                         pto = file.read(8)
                         pto = struct.unpack(">2i", pto)
-                        lon = math.radians(pto[0] * 10**-6)
-                        lat = math.radians(pto[1] * 10**-6)
+                        lon = math.radians(pto[0] * 10** -6)
+                        lat = math.radians(pto[1] * 10** -6)
                         if lon > math.pi:
                             lon = lon - 2 * math.pi
                         if lat < chartbox[0][0] \
                                 and lat > chartbox[0][1] \
                                 and lon < chartbox[1][0] \
                                 and lon > chartbox[1][1]:
-                                    polygon.append((lat, lon))
+                            polygon.append((lat, lon))
                         else:  # break the polygon and start a new one
                             if len(polygon) > 0:
                                 self.polygons.append(polygon)
@@ -66,5 +67,5 @@ def str32bit(flag):
     # flag 1 integer vs stringa 8 bit
     flag = bin(flag)[2:]  # stringa di bit
     if len(flag) < 32:
-        flag = (32-len(flag)) * "0" + flag
+        flag = (32 - len(flag)) * "0" + flag
     return flag
