@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#Copyright (C) 2012 Riccardo Apolloni
+# Copyright (C) 2012 Riccardo Apolloni
 '''
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,24 +16,31 @@ For detail about GNU see <http://www.gnu.org/licenses/>.
 import math
 from ModuloNav import *
 
-#COSTANTI
-MIOWP = (math.radians(44), math.radians(10))  #(lat,lon) N>0, E>0
+# CONSTANTS
+MIOWP = (math.radians(44), math.radians(10))  # (lat,lon) N>0, E>0
+# I think it is a waypoint  only used during testing (see below)
 
 
-#OGGETTI
-class Ellissi:
-    #coordinate X, Y vs. riferimento assoluto, Y in alto
-    #coordinate x ed y vs. riferimento relativi (x sull'asse maggiore ellisse)
-    #Alfa per angoli rispetto al nord,
-    #alfa per angoli rispetto all'asse maggiore dell'ellisse
+# OBJECTS
+class Elipsis:  # Ellissi
+    '''
+    Elipsis Class might only be used in isochrones. 
+    '''
+    # X, Y coordinates Vs. absolute reference, Y at the top
+    # coordinates x and y vs. Reference related (x on the major ellipse)
+    # Alfa for angles to the north,
+    # alfa for angles to the major axis of the ellipse
 
-    def __init__(self, assemaggiore=100, eccentr=1.5, direttrice=0.0):
-        #direttrice: gradi "bussola" del semiasse maggiore
-        self.a = float(assemaggiore)
-        self.e = float(eccentr)
-        self.d = direttrice
+    def __init__(self, 
+            major_axis=100,    # assemaggiore/major_axis
+            eccentricity=1.5,  # eccentr/eccentricity
+            directrix=0.0):    # direttrice/directrix
+        # directrix: "compass" degrees of semi-major axis
+        self.a = float(major_axis)
+        self.e = float(eccentricity)
+        self.d = directrix
 
-    def disegna(self):
+    def draw(self):  # disegna/draw
         pti = []
         for t in range(0, 361):  #eq. parametrica
             t = math.radians(t)
@@ -46,7 +53,7 @@ class Ellissi:
         return pti
 
     def calcolaparametri(self, X, Y):
-        #calcola l'ellise passante per XY, variando il semiasse maggiore
+        # calcola l'ellise passante per XY, variando il semiasse maggiore
         x = X * math.sin(self.d) + Y * math.cos(self.d)
         y = -X * math.cos(self.d) + Y * math.sin(self.d)
         r = (x**2 + y**2)**0.5
@@ -65,11 +72,11 @@ class Ellissi:
         self.a = a
 
     def calcolatangente(self, Teta):
-        #rende la (direzione M della) tangente all'ellisse
-        #nel punto (dell'ellisse rilevato per ) Teta (in gradi bussola, dal centro dell'ellisse)
+        # rende la (direzione M della) tangente all'ellisse
+        # nel punto (dell'ellisse rilevato per ) Teta (in gradi bussola, dal centro dell'ellisse)
         teta = self.d - Teta
         t = math.atan2(self.e * math.sin(teta), math.cos(teta)
-                       )  #relazione tra parametro t e Teta
+                       )  # relazione tra parametro t e Teta
         x = self.a * math.cos(t)
         y = self.a / self.e * math.sin(t)
         a = self.a
@@ -79,11 +86,11 @@ class Ellissi:
         return M
 
     def raggiocurvatura(self, Teta):
-        #rende il raggio di curvatura dell'ellisse
-        #nel punto (dell'ellisse rilevato per ) Teta (in gradi bussola, dal centro dell'ellisse)
+        # rende il raggio di curvatura dell'ellisse
+        # nel punto (dell'ellisse rilevato per ) Teta (in gradi bussola, dal centro dell'ellisse)
         teta = self.d - Teta
         t = math.atan2(self.e * math.sin(teta), math.cos(teta)
-                       )  #relazione tra parametro t e Teta
+                       )  # relazione tra parametro t e Teta
         a = self.a
         b = self.a / self.e
         curv = a * b / ((a * math.sin(t))**2 + (b * math.cos(t))**2)**(1.5)
@@ -91,18 +98,24 @@ class Ellissi:
 
 
 class Bezier:
-    def __init__(self, pticontrollo=[]):
-        self.pticontrollo = pticontrollo  #lista di punti di controllo della curva in formato (x,y)
+    def __init__(self, control_points=[]):  # pticontrollo/control_points
+        self.control_points = control_points  
+        '''
+        JB: I think this  class is crucial to the interpolation of the 
+        boat polars.  But I'll learn more.
+        '''
+        # list of control points for the curve
 
     def calcolavalore(self, t):
-        #rende il punto della curva di bezier di parametro t
-        n = len(self.pticontrollo) - 1
+        # makes a point in the Bezier curve.
+        n = len(self.control_points) - 1
         x = 0
         y = 0
         for k in range(0, n + 1):
-            peso = ((1 - t)**(n - k)) * (t**k) * cfbinomiale(n, k)
-            x = x + self.pticontrollo[k][0] * peso
-            y = y + self.pticontrollo[k][1] * peso
+            weight = ((1 - t)**(n - k)) * (t**k) * cfbinomiale(n, k)  
+            # peso/weight
+            x = x + self.control_points[k][0] * weight
+            y = y + self.control_points[k][1] * weight
         return (x, y)
 
 
