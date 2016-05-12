@@ -14,7 +14,7 @@ GNU General Public License for more details.
 For detail about GNU see <http://www.gnu.org/licenses/>.
 '''
 import math
-from ModuloNav import *
+# from ModuloNav import *
 
 # CONSTANTS
 MIOWP = (math.radians(44), math.radians(10))  # (lat,lon) N>0, E>0
@@ -24,17 +24,17 @@ MIOWP = (math.radians(44), math.radians(10))  # (lat,lon) N>0, E>0
 # OBJECTS
 class Elipsis:  # Ellissi
     '''
-    Elipsis Class might only be used in isochrones. 
+    Elipsis Class might only be used in isochrones.
     '''
     # X, Y coordinates Vs. absolute reference, Y at the top
     # coordinates x and y vs. Reference related (x on the major ellipse)
     # Alfa for angles to the north,
     # alfa for angles to the major axis of the ellipse
 
-    def __init__(self, 
-            major_axis=100,    # assemaggiore/major_axis
-            eccentricity=1.5,  # eccentr/eccentricity
-            directrix=0.0):    # direttrice/directrix
+    def __init__(self,
+                 major_axis=100,    # assemaggiore/major_axis
+                 eccentricity=1.5,  # eccentr/eccentricity
+                 directrix=0.0):    # direttrice/directrix
         # directrix: "compass" degrees of semi-major axis
         self.a = float(major_axis)
         self.e = float(eccentricity)
@@ -42,7 +42,7 @@ class Elipsis:  # Ellissi
 
     def draw(self):  # disegna/draw
         pti = []
-        for t in range(0, 361):  #eq. parametrica
+        for t in range(0, 361):  # eq. parametrica
             t = math.radians(t)
             x = self.a * math.cos(t)
             b = self.a / self.e
@@ -61,7 +61,7 @@ class Elipsis:  # Ellissi
         a = self.a
         b = a / self.e
         r1 = a * b / ((b * math.cos(teta))**2 +
-                      (a * math.sin(teta))**2)**0.5  #eq.polare
+                      (a * math.sin(teta))**2)**0.5  # eq. polare
         n = 0
         while (r - r1)**2 > 0.0001 and n < 10**6:
             n = n + 1
@@ -73,7 +73,8 @@ class Elipsis:  # Ellissi
 
     def calcolatangente(self, Teta):
         # rende la (direzione M della) tangente all'ellisse
-        # nel punto (dell'ellisse rilevato per ) Teta (in gradi bussola, dal centro dell'ellisse)
+        # nel punto (dell'ellisse rilevato per ) Teta
+        # (in gradi bussola, dal centro dell'ellisse)
         teta = self.d - Teta
         t = math.atan2(self.e * math.sin(teta), math.cos(teta)
                        )  # relazione tra parametro t e Teta
@@ -87,7 +88,8 @@ class Elipsis:  # Ellissi
 
     def raggiocurvatura(self, Teta):
         # rende il raggio di curvatura dell'ellisse
-        # nel punto (dell'ellisse rilevato per ) Teta (in gradi bussola, dal centro dell'ellisse)
+        # nel punto (dell'ellisse rilevato per ) Teta (in gradi bussola,
+        # dal centro dell'ellisse)
         teta = self.d - Teta
         t = math.atan2(self.e * math.sin(teta), math.cos(teta)
                        )  # relazione tra parametro t e Teta
@@ -99,10 +101,12 @@ class Elipsis:  # Ellissi
 
 class Bezier:
     def __init__(self, control_points=[]):  # pticontrollo/control_points
-        self.control_points = control_points  
+        self.control_points = control_points
         '''
-        JB: I think this  class is crucial to the interpolation of the 
+        JB: I think this  class is crucial to the interpolation of the
         boat polars.  But I'll learn more.
+
+        Or it might be for nothing more than drawing an image of the boat.
         '''
         # list of control points for the curve
 
@@ -112,25 +116,25 @@ class Bezier:
         x = 0
         y = 0
         for k in range(0, n + 1):
-            weight = ((1 - t)**(n - k)) * (t**k) * cfbinomiale(n, k)  
+            weight = ((1 - t)**(n - k)) * (t**k) * cfbinomiale(n, k)
             # peso/weight
             x = x + self.control_points[k][0] * weight
             y = y + self.control_points[k][1] * weight
         return (x, y)
 
 
-class Polare:
+class Polar:  # Polare/Polar
     '''
-    Dati Polare in filepolare (file.pol), ordinati per TWA (righe),TWS (colonne) 
+    Polar data (file.pol), ranked by TWA (rows), TWS (columns)
     '''
 
-    def __init__(self, filepolare=""):
-        #leggiamo la tabella Pol
-        self.TWS = []  #array dei valori di TWS tabellati in polare.pol
-        self.TWA = []  #array dei valori del TWA in [0,180]
+    def __init__(self, polar_file=""):  # filepolare/polar_file
+        # read the Polar Table in
+        self.TWS = []  # array of TWS (wind speed values)
+        self.TWA = []  # array TWA (wind angle) [0,180]
         self.vmgdict = {}
         self.SpeedTable = []
-        File = open(filepolare, "r")
+        File = open(polar_file, "r")
         line = File.readline()
         tws = line.split()
         for i in range(1, len(tws)):
@@ -140,6 +144,7 @@ class Polare:
             dato = line.split()
             twa = float(dato[0])
             self.TWA.append(math.radians(twa))
+            '''Interesting even in the polar object twa stored as a radian'''
             speedline = []
             for i in range(1, len(dato)):
                 speed = float(dato[i])
@@ -149,13 +154,28 @@ class Polare:
         File.close()
 
     def Speed(self, TWS, TWA):
+        '''
+        This function applies the polar to the current wind speed
+        and angle and returns the resulting boat speed.
+        The input TWS and TWA are single values?
+        '''
         if TWA == 0: return 0.0
+        'boat is in irons, no need to look anything up.'
+        # Next TWS might be between two charted points
         tws1 = 0
         tws2 = 0
         for k in range(0, len(self.TWS)):
             if TWS >= self.TWS[k]:
                 tws1 = k
         for k in range(len(self.TWS) - 1, 0, -1):
+            # range (start, stop, step)
+            '''
+            So we start with the lenght of the TWS array minus 1, 
+            step down until we reach 0. (first entry in the list)
+            And if we reach a value that is less or eq. to the input
+            then we'll store in in tws 2.  This gives us our top bound
+            .  We now know that TWS is between tws1 and tws2
+            '''
             if TWS <= self.TWS[k]:
                 tws2 = k
         if tws1 > tws2:  #caso di TWS oltre i valori in tabella
@@ -262,12 +282,12 @@ class Barca:
                  log=0.0,
                  twa=0.0,
                  tw=(0.0, 0.0),
-                 filepolare=""):
+                 polar_file=""):
         self.Pos = pos  #tupla (lat,lon) in radianti
         self.Log = log
         self.TWA = twa  #positivo per mure a dritta, [-180,180]
         self.TW = tw  #tupla (TWD,TWS) TWD in radianti, TWS in knts
-        self.Plr = Polare(filepolare)
+        self.Plr = Polar(polar_file)
         bezier = Bezier([(-40.0, -75.0), (-60.5, 55.0),
                          (0.0, 125.0)])  #icona barca
         icona = [(0.0, -75.0)]
@@ -401,7 +421,7 @@ class Barca:
             randaruotata.append(ruota(punto, self.HDG()))
         return iconaruotata, fioccoruotato, randaruotata
 
-    def StampaPolare(self):
+    def StampaPolar(self):
         polare = []
         for twa in range(0, 185, 5):
             twa = math.radians(twa)
@@ -510,7 +530,7 @@ def ruota(punto, angle):
 
 
 def testmodulo():
-    MaVie = Barca(filepolare="POL/PolareMini.pol")
+    MaVie = Barca(polar_file="POL/PolareMini.pol")
     #variabili indipendenti
     MaVie.TW = (math.radians(45), 16)  #1
     MaVie.TWA = math.radians(60)  #3
