@@ -14,7 +14,7 @@ GNU General Public License for more details.
 For detail about GNU see <http://www.gnu.org/licenses/>.
 '''
 import math
-# from ModuloNav import *
+from Navigation import *
 
 # CONSTANTS
 MIOWP = (math.radians(44), math.radians(10))  # (lat,lon) N>0, E>0
@@ -112,6 +112,7 @@ class Bezier:
 
     def calcolavalore(self, t):
         # makes a point in the Bezier curve.
+        # not translated yet.
         n = len(self.control_points) - 1
         x = 0
         y = 0
@@ -140,7 +141,7 @@ class Polar:  # Polare/Polar
         for i in range(1, len(tws)):
             self.TWS.append(float(tws[i]))
         line = File.readline()
-        while line <> "":
+        while line != "":
             dato = line.split()
             twa = float(dato[0])
             self.TWA.append(math.radians(twa))
@@ -159,7 +160,8 @@ class Polar:  # Polare/Polar
         and angle and returns the resulting boat speed.
         The input TWS and TWA are single values?
         '''
-        if TWA == 0: return 0.0
+        if TWA == 0:
+            return 0.0
         'boat is in irons, no need to look anything up.'
         # Next TWS might be between two charted points
         tws1 = 0
@@ -170,7 +172,7 @@ class Polar:  # Polare/Polar
         for k in range(len(self.TWS) - 1, 0, -1):
             # range (start, stop, step)
             '''
-            So we start with the lenght of the TWS array minus 1, 
+            So we start with the lenght of the TWS array minus 1,
             step down until we reach 0. (first entry in the list)
             And if we reach a value that is less or eq. to the input
             then we'll store in in tws 2.  This gives us our top bound
@@ -178,8 +180,12 @@ class Polar:  # Polare/Polar
             '''
             if TWS <= self.TWS[k]:
                 tws2 = k
-        if tws1 > tws2:  #caso di TWS oltre i valori in tabella
+        if tws1 > tws2:  # in case input TWS is off the chart
             tws2 = len(self.TWS) - 1
+            '''
+            So this surprises me how is the length of the array the speed
+            value?
+            '''
         twa1 = 0
         twa2 = 0
         for k in range(0, len(self.TWA)):
@@ -188,24 +194,45 @@ class Polar:  # Polare/Polar
         for k in range(len(self.TWA) - 1, 0, -1):
             if TWA <= self.TWA[k]:
                 twa2 = k
+            '''
+            Same as with TWS
+            '''
         speed1 = self.SpeedTable[twa1][tws1]
         speed2 = self.SpeedTable[twa2][tws1]
         speed3 = self.SpeedTable[twa1][tws2]
         speed4 = self.SpeedTable[twa2][tws2]
-        if twa1 <> twa2:
+        '''
+        Now this is interesting, these four values.
+        S1  = the bottom angle and speed,
+        S4 = the top and 2&3 are in between.
+        '''
+        if twa1 != twa2:
+            '''
+            I think this means that TWA was not an exact match therefore we
+            have to interpolate.
+            '''
             speed12 = speed1 + (speed2 - speed1) * (TWA - self.TWA[twa1]) / (
-                self.TWA[twa2] - self.TWA[twa1])  #interpolazione su TWA
+                self.TWA[twa2] - self.TWA[twa1])  # interpolation of TWA
             speed34 = speed3 + (speed4 - speed3) * (TWA - self.TWA[twa1]) / (
-                self.TWA[twa2] - self.TWA[twa1])  #interpolazione su TWA
+                self.TWA[twa2] - self.TWA[twa1])  # interpolation of TWA
         else:
+            '''
+            But if TWA was an exact hit on the polar then... this simplifies
+            interpolation a little.
+            '''
             speed12 = speed1
             speed34 = speed3
-        if tws1 <> tws2:
+        if tws1 != tws2:
+            '''
+            Then we do the same for the speed and get our result.
+            This is really cool. I hope I can understand it later and reproduce
+            it.
+            '''
             speed = speed12 + (speed34 - speed12) * (TWS - self.TWS[tws1]) / (
                 self.TWS[tws2] - self.TWS[tws1])
         else:
             speed = speed12
-        return speed * 0.90  #valore di degrado
+        return speed * 0.90  # arbitrarily degrade performance
 
     def Reaching(self, TWS):
         maxspeed = 0
@@ -227,7 +254,7 @@ class Polar:  # Polare/Polar
             while alfa < twamax:
                 v = self.Speed(tws, alfa)
                 vmg = v * math.cos(alfa - twa)
-                if vmg - maxvmg > 10** -3:  #10**-3 errore tollerato
+                if vmg - maxvmg > 10**-3:  # 10**-3 errore tollerato
                     maxvmg = vmg
                     twamaxvmg = alfa
                 alfa = alfa + math.radians(1)
@@ -283,13 +310,13 @@ class Barca:
                  twa=0.0,
                  tw=(0.0, 0.0),
                  polar_file=""):
-        self.Pos = pos  #tupla (lat,lon) in radianti
+        self.Pos = pos  # tupla (lat,lon) in radianti
         self.Log = log
-        self.TWA = twa  #positivo per mure a dritta, [-180,180]
-        self.TW = tw  #tupla (TWD,TWS) TWD in radianti, TWS in knts
+        self.TWA = twa  # positivo per mure a dritta, [-180,180]
+        self.TW = tw  # tupla (TWD,TWS) TWD in radianti, TWS in knts
         self.Plr = Polar(polar_file)
         bezier = Bezier([(-40.0, -75.0), (-60.5, 55.0),
-                         (0.0, 125.0)])  #icona barca
+                         (0.0, 125.0)])  # icona barca
         icona = [(0.0, -75.0)]
         for i in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]:
             icona.append(bezier.calcolavalore(i))
@@ -316,16 +343,18 @@ class Barca:
             if self.TWA<-math.pi:self.TWA=-math.pi
     '''
 
-    def Orza(self):  #revisione 29/11/2013
+    def Orza(self):  # revisione 29/11/2013
         twa = math.copysign(self.TWA, 1)
         twa = twa - math.radians(1)
-        if twa < 0: twa = 0
+        if twa < 0:
+            twa = 0
         self.TWA = math.copysign(twa, self.TWA)
 
     def Puggia(self):
         twa = math.copysign(self.TWA, 1)
         twa = twa + math.radians(1)
-        if twa > math.pi: twa = math.pi
+        if twa > math.pi:
+            twa = math.pi
         self.TWA = math.copysign(twa, self.TWA)
 
     def CambiaMura(self):
@@ -352,7 +381,7 @@ class Barca:
         return self.Plr.SpeedRoutage(self.TW[1], twa)
 
     def HDG(self):
-        return riduci360(self.TW[0] - self.TWA)  #TWA positivo mure a dritta
+        return riduci360(self.TW[0] - self.TWA)  # TWA positivo mure a dritta
 
     def BRG(self, wp):
         losso = lossodromica(self.Pos[0], self.Pos[1], wp[0], wp[1])
@@ -392,11 +421,11 @@ class Barca:
         TWS = self.TW[1]
         SPEED = self.Speed()
         aw = AW(TWS, TWA, SPEED)
-        #AWSy=TWS*math.cos(TWA)+SPEED
-        #AWSx=TWS*math.sin(TWA)
-        #AWS=(AWSy**2+AWSx**2)**0.5
-        #AWA=math.pi/2-math.atan2(AWSy,AWSx)
-        #aw=(AWS,AWA)
+        # AWSy=TWS*math.cos(TWA)+SPEED
+        # AWSx=TWS*math.sin(TWA)
+        # AWS=(AWSy**2+AWSx**2)**0.5
+        # AWA=math.pi/2-math.atan2(AWSy,AWSx)
+        # aw=(AWS,AWA)
         if self.TWA < 0:
             aw = (aw[0], -aw[1])
         return aw
@@ -426,10 +455,10 @@ class Barca:
         for twa in range(0, 185, 5):
             twa = math.radians(twa)
             speed = self.Plr.Speed(self.TW[1], twa)
-            if self.TWA < 0:  #mure a sx
+            if self.TWA < 0:  # mure a sx
                 x = speed * math.sin(twa)
                 y = speed * math.cos(twa)
-            else:  #mure a dx
+            else:  # mure a dx
                 x = -speed * math.sin(twa)
                 y = speed * math.cos(twa)
             polare.append((x, y))
@@ -459,7 +488,7 @@ class Barca:
             zero = 125
             x0 = 0
             y0 = 0
-    #if math.copysign(awa,1)<math.radians(25):
+    # if math.copysign(awa,1)<math.radians(25):
         if self.Speed() <= 0 or awa < math.radians(15):
             fiocco = [(0, 125.0), (0, 35.0)]
         else:
@@ -485,7 +514,7 @@ class Barca:
         awa = math.copysign(awa, 1)
         l = 110
         zero = 35
-        alfa0 = 10  #integer
+        alfa0 = 10  # integer
         r = 0.5 * l / math.tan(math.radians(alfa0))
         if self.Speed() <= 0 or awa <= math.radians(alfa0):
             randa = [(0, 35.0), (0, -75.0)]
@@ -504,7 +533,7 @@ class Barca:
         return randa
 
 
-#FUNZIONI
+# FUNZIONI
 def cfbinomiale(n, i):
     return math.factorial(n) / (math.factorial(n - i) * math.factorial(i))
 
@@ -531,9 +560,9 @@ def ruota(punto, angle):
 
 def testmodulo():
     MaVie = Barca(polar_file="POL/PolareMini.pol")
-    #variabili indipendenti
-    MaVie.TW = (math.radians(45), 16)  #1
-    MaVie.TWA = math.radians(60)  #3
+    # variabili indipendenti
+    MaVie.TW = (math.radians(45), 16)  # 1
+    MaVie.TWA = math.radians(60)  # 3
     MaVie.Pos = (math.radians(42), math.radians(12))
     print "TWD: ", math.degrees(MaVie.TW[0])
     print "TWS: ", MaVie.TW[1]
@@ -550,7 +579,7 @@ def testmodulo():
     print "CMG: per rlv=40", MaVie.CMG(math.radians(40))
     print "TWAmaxCMG: per rlv=40", math.degrees(MaVie.TWAmaxCMG(math.radians(
         40)))
-    MaVie.Muovi(5)  #metodo muovi
+    MaVie.Muovi(5)  # metodo muovi
     print "Muovi per 5 secondi"
     print "lat: ", MaVie.StampaLat(), "lon: ", MaVie.StampaLat()
     print "Log: ", MaVie.Log
