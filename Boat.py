@@ -235,6 +235,11 @@ class Polar:  # Polare/Polar
         return speed * 0.90  # arbitrarily degrade performance
 
     def Reaching(self, TWS):
+        '''
+        I kinda see what this does but fail to understand why
+        I guess it picks out the highest speed tack for a given
+        wind speed. Important I guess for optimization.
+        '''
         maxspeed = 0
         TWAmaxspeed = 0
         for twa in range(0, 181):
@@ -254,6 +259,9 @@ class Polar:  # Polare/Polar
             while alfa < twamax:
                 v = self.Speed(tws, alfa)
                 vmg = v * math.cos(alfa - twa)
+                '''
+                Okay. This is like looking at a polar to see VMG upwind.
+                '''
                 if vmg - maxvmg > 10**-3:  # 10**-3 errore tollerato
                     maxvmg = vmg
                     twamaxvmg = alfa
@@ -301,7 +309,11 @@ class Polar:  # Polare/Polar
             if TWA > twadown:
                 twa = twadown
         return twa
-
+'''
+I'm probably not easily going to understand the code by simply reading and even
+translating the variables and comments.  Instead I have to try implementing my
+own library ... I'll learn on a need to know basis I suppose.
+'''
 
 class Barca:
     def __init__(self,
